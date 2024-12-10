@@ -37,7 +37,7 @@ class GrundyRecBrute {
                     valid = true;
                     index = SimpleInput.getInt("Quel est l'indice du tas choisi ? ");
                     answer = SimpleInput.getInt("Combien d'allumettes enlevez vous ? ");
-                    ArrayList<Integer> essai = new ArrayList<Integer>(jeu);
+                    ArrayList<Integer> essai = new ArrayList<>(jeu);
                     enlever(jeu, index, answer);
 
                     if (essai.equals(jeu)) {
