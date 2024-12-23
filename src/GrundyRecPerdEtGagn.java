@@ -10,9 +10,10 @@ import java.util.Collections;
  *
  * @author J-F. Kamp et C. Tibermacine
  */
-class GrundyRecPerdantes {
+class GrundyRecPerdEtGagn {
 
     ArrayList<ArrayList<Integer>> posPerdantes = new ArrayList<>();
+    ArrayList<ArrayList<Integer>> posGagnantes = new ArrayList<>();
 
     long cpt;
 
@@ -154,6 +155,8 @@ class GrundyRecPerdantes {
             cpt++;
             if (!estPossible(jeu)) {
                 ret = true;
+            } else if (estConnueGagnante(jeuNormalise)) {
+                ret = false;
             } else if (estConnuePerdante(jeuNormalise)) {
                 ret = true;
             } else {
@@ -183,6 +186,9 @@ class GrundyRecPerdantes {
         if (ret) {
             // on ajoute la configuration perdante à la liste des configurations perdantes
             posPerdantes.add(normaliser(jeu));
+        } else {
+            // on ajoute la configuration gagnante à la liste des configurations gagnantes
+            posGagnantes.add(normaliser(jeu));
         }
         return ret;
     }
@@ -607,6 +613,32 @@ class GrundyRecPerdantes {
      *
      */
     boolean estConnuePerdante(ArrayList<Integer> jeu) {
+        boolean ret = false;
+        ArrayList<Integer> jeuNormalise = normaliser(jeu);
+        for (int i = 0; i < posPerdantes.size(); i++) {
+            if (jeuNormalise.equals(posPerdantes.get(i))) {
+                ret = true;
+            }
+        }
+        return ret;
+    }
+    /**
+     * Renvoie vrai si et seulement si APRES normalisation de jeu, il y a
+     * égalité entre jeu et une situation connue comme gagnante dans le tableau
+     * des situations gagnantes.
+     *
+     */
+    boolean estConnueGagnante(ArrayList<Integer> jeu) {
+        boolean ret = false;
+        ArrayList<Integer> jeuNormalise = normaliser(jeu);
+        for (int i = 0; i < posGagnantes.size(); i++) {
+            if (jeuNormalise.equals(posGagnantes.get(i))) {
+                ret = true;
+            }
+        }
+        return ret;
+    }
+    boolean estConnueGagante(ArrayList<Integer> jeu) {
         boolean ret = false;
         ArrayList<Integer> jeuNormalise = normaliser(jeu);
         for (int i = 0; i < posPerdantes.size(); i++) {

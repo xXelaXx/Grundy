@@ -18,23 +18,23 @@ class GrundyRecBrute {
      * Méthode principal du programme, lancement du jeu
      */
     void principal() {
-        testSuivant();
-        testEstPerdante();
-        testAfficher();
-        testPremier();
-        testJouerGagnant();
-        testLeJeu();
-        testEstGagnante();
-        testEnlever();
-        testEstPossible();
+        // testSuivant();
+        // testEstPerdante();
+        // testAfficher();
+        // testPremier();
+        // testJouerGagnant();
+        // testLeJeu();
+        // testEstGagnante();
+        // testEnlever();
+        // testEstPossible();
 
-        // testEstGagnanteEfficacite();
+        testEstGagnanteEfficacite();
         // leJeu(5);
     }
 
     /**
      * Joue le jeu de Grundy
-     * 
+     *
      * @param n nombre d'allumettes dans le jeu
      */
     void leJeu(int n) {
@@ -107,19 +107,19 @@ class GrundyRecBrute {
         System.out.println("Test des cas normaux");
 
         ArrayList<Integer> jeu1 = new ArrayList<Integer>();
-        
+
         testCasLeJeu(1);
-        
+
         testCasLeJeu(2);
-        
-        testCasLeJeu(5);        
+
+        testCasLeJeu(5);
 
         System.out.println("");
     }
 
     /**
      * Test d'un cas de la méthode leJeu()
-     * 
+     *
      * @param nb nombre d'allumettes dans le jeu
      */
     void testCasLeJeu(int nb) {
@@ -239,6 +239,7 @@ class GrundyRecBrute {
         } else {
             // si il n'y a plus que des tas de 1 ou 2 allumettes dans le plateau de jeu
             // alors la situation est forcément perdante (ret=true) = FIN de la récursivité
+            cpt++;
             if (!estPossible(jeu)) {
                 ret = true;
             } else {
@@ -251,7 +252,6 @@ class GrundyRecBrute {
                 int ligne = premier(jeu, essai);
 
                 while ((ligne != -1) && ret) {
-                    cpt++;
 
                     // mise en oeuvre de la règle numéro1
                     // Une situation (ou position) est dite perdante si et seulement si TOUTES ses décompositions possibles
@@ -365,8 +365,7 @@ class GrundyRecBrute {
     }
 
     /**
-     * Test d'efficacité de la méthode est
-     * Gagnante
+     * Test d'efficacité de la méthode est Gagnante
      */
     void testEstGagnanteEfficacite() {
         // variables locales
@@ -375,7 +374,7 @@ class GrundyRecBrute {
         long t1, t2, diffT;
         double n2;
         // initialisation
-        n = 3;
+        n = 10;
         // multiplication de n par « 2 » à chaque tour
         // 6 expériences
         for (int i = 1; i <= 6; i++) {
@@ -384,10 +383,11 @@ class GrundyRecBrute {
             t1 = System.nanoTime();
             ArrayList<Integer> jeu = new ArrayList<Integer>();
             jeu.add(n);
-            estGagnante(jeu);
-            t2 = System.currentTimeMillis();
+            boolean valeur = estGagnante(jeu);
+            System.out.println("La partie est-elle gagnante ? " + valeur);
+            t2 = System.nanoTime();
             diffT = (t2 - t1); // en nanosecondes
-            System.out.println("Tps = " + diffT + " ms");
+            System.out.println("Tps = " + diffT + " ns");
             System.out.println("cpt = " + (double) cpt);
             // multiplication de n par « 2 » à chaque tour
             n = n + 1;
