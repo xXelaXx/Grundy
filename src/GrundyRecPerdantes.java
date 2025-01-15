@@ -159,30 +159,22 @@ class GrundyRecPerdantes {
             } else {
                 // sinon on continue la recherche
                 // on crée une nouvelle configuration d'essai à partir de jeu
-                ArrayList<Integer> jeuEssai = new ArrayList<Integer>();
+                ArrayList<Integer> jeuEssai = new ArrayList<>();
                 int ligne = premier(jeu, jeuEssai);
-                // on teste si la nouvelle configuration d'essai est gagnante
-                // si elle est gagnante, alors la configuration actuelle est perdante
-                if (ligne != -1) {
-                    if (jouerGagnant(jeuEssai)) {
-                        ret = false;
+                while (ligne != -1 && !ret) {
+                    if (estPerdante(jeuEssai)) {
+                        ret = true;
                     } else {
-                        // sinon on continue la recherche
-                        // on teste si une autre configuration d'essai est gagnante
-                        while (ligne != -1 && !ret) {
-                            if (estPerdante(jeuEssai)) {
-                                ret = true;
-                            } else {
-                                ligne = suivant(jeu, jeuEssai, ligne);
-                            }
-                        }
+                        ligne = suivant(jeu, jeuEssai, ligne);
                     }
                 }
             }
         }
         if (ret) {
-            // on ajoute la configuration perdante à la liste des configurations perdantes
-            posPerdantes.add(normaliser(jeu));
+            ArrayList<Integer> normalisee = normaliser(jeu);
+            if (!posPerdantes.contains(normalisee)) {
+                posPerdantes.add(normalisee);
+            }
         }
         return ret;
     }
@@ -255,10 +247,10 @@ class GrundyRecPerdantes {
         long t1, t2, diffT;
         double n2;
         // initialisation
-        n = 10;
+        n = 3;
         // multiplication de n par « 2 » à chaque tour
         // 6 expériences
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 5000; i++) {
             tab = new int[n];
             cpt = 0; // variable globale « long »
             t1 = System.nanoTime();
@@ -366,6 +358,7 @@ class GrundyRecPerdantes {
                 jeuEssai.add(jeu.get(i));
                 i = i + 1;
             }
+           
 
             i = 0;
             // rechercher un tas d'allumettes d'au moins 3 allumettes dans le jeu
@@ -387,6 +380,7 @@ class GrundyRecPerdantes {
             // jeuEssai est le plateau de jeu qui fait apparaître cette séparation
             if (numTas != -1) {
                 enlever(jeuEssai, numTas, 1);
+              
             }
         }
 
@@ -609,6 +603,7 @@ class GrundyRecPerdantes {
     boolean estConnuePerdante(ArrayList<Integer> jeu) {
         boolean ret = false;
         ArrayList<Integer> jeuNormalise = normaliser(jeu);
+
         for (int i = 0; i < posPerdantes.size(); i++) {
             if (jeuNormalise.equals(posPerdantes.get(i))) {
                 ret = true;

@@ -164,32 +164,27 @@ class GrundyRecPerdEtGagn {
                 // on crée une nouvelle configuration d'essai à partir de jeu
                 ArrayList<Integer> jeuEssai = new ArrayList<Integer>();
                 int ligne = premier(jeu, jeuEssai);
-                // on teste si la nouvelle configuration d'essai est gagnante
-                // si elle est gagnante, alors la configuration actuelle est perdante
-                if (ligne != -1) {
-                    if (jouerGagnant(jeuEssai)) {
-                        ret = false;
+
+                while (ligne != -1 && !ret) {
+                    if (estPerdante(jeuEssai)) {
+                        ret = true;
                     } else {
-                        // sinon on continue la recherche
-                        // on teste si une autre configuration d'essai est gagnante
-                        while (ligne != -1 && !ret) {
-                            if (estPerdante(jeuEssai)) {
-                                ret = true;
-                            } else {
-                                ligne = suivant(jeu, jeuEssai, ligne);
-                            }
-                        }
+                        ligne = suivant(jeu, jeuEssai, ligne);
                     }
                 }
             }
         }
+        ArrayList<Integer> normalisee = normaliser(jeu);
         if (ret) {
-            // on ajoute la configuration perdante à la liste des configurations perdantes
-            posPerdantes.add(normaliser(jeu));
+            if (!posPerdantes.contains(normalisee)) {
+                posPerdantes.add(normalisee);
+            }
         } else {
-            // on ajoute la configuration gagnante à la liste des configurations gagnantes
-            posGagnantes.add(normaliser(jeu));
+            if (!posGagnantes.contains(normalisee)) {
+                posGagnantes.add(normalisee);
+            }
         }
+
         return ret;
     }
 
@@ -261,10 +256,10 @@ class GrundyRecPerdEtGagn {
         long t1, t2, diffT;
         double n2;
         // initialisation
-        n = 10;
+        n = 3;
         // multiplication de n par « 2 » à chaque tour
         // 6 expériences
-        for (int i = 1; i <= 6; i++) {
+        for (int i = 1; i <= 5000; i++) {
             tab = new int[n];
             cpt = 0; // variable globale « long »
             t1 = System.nanoTime();
@@ -615,6 +610,7 @@ class GrundyRecPerdEtGagn {
     boolean estConnuePerdante(ArrayList<Integer> jeu) {
         boolean ret = false;
         ArrayList<Integer> jeuNormalise = normaliser(jeu);
+
         for (int i = 0; i < posPerdantes.size(); i++) {
             if (jeuNormalise.equals(posPerdantes.get(i))) {
                 ret = true;
@@ -631,6 +627,7 @@ class GrundyRecPerdEtGagn {
     boolean estConnueGagnante(ArrayList<Integer> jeu) {
         boolean ret = false;
         ArrayList<Integer> jeuNormalise = normaliser(jeu);
+
         for (int i = 0; i < posGagnantes.size(); i++) {
             if (jeuNormalise.equals(posGagnantes.get(i))) {
                 ret = true;
@@ -638,16 +635,8 @@ class GrundyRecPerdEtGagn {
         }
         return ret;
     }
-    boolean estConnueGagante(ArrayList<Integer> jeu) {
-        boolean ret = false;
-        ArrayList<Integer> jeuNormalise = normaliser(jeu);
-        for (int i = 0; i < posPerdantes.size(); i++) {
-            if (jeuNormalise.equals(posPerdantes.get(i))) {
-                ret = true;
-            }
-        }
-        return ret;
-    }
+
+
 
     /**
      * Normalise le plateau de jeu
@@ -661,6 +650,8 @@ class GrundyRecPerdEtGagn {
             System.err.println("normaliser(): le paramètre jeu est null");
         } else {
             // copie du jeu dans normalisee
+                
+            
             for (int i = 0; i < jeu.size(); i++) {
                 normalisee.add(jeu.get(i));
             }
@@ -669,4 +660,5 @@ class GrundyRecPerdEtGagn {
         }
         return normalisee;
     }
+    
 }
