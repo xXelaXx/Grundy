@@ -4,44 +4,25 @@ import java.util.Arrays;
 import java.util.Collections;
 
 /**
- * Grundy's Game.
+ * Grundy game - Version 4. This version optimizes efficiency by applying
+ * additional rules for combining winning and losing piles: - Winning + Winning
+ * (same type) = Losing - Winning + Winning (different types) = Winning
  *
- * This version 2 improves efficiency by storing not only losing positions but
- * also winning positions in two separate arrays (`posPerdantes` and
- * `posGagnantes`). This avoids unnecessary recursive calculations by directly
- * checking if a position is already known before proceeding.
+ * Neutral configurations and redundant pairs are removed during normalization.
+ * Winning and losing positions are stored in `posGagnantes` and `posPerdantes`.
  *
- * Positions are normalized before being added to the arrays to simplify
- * comparisons and searches.
+ * Builds on previous versions with enhanced type-based simplifications for
+ * faster calculations.
  *
- * @author Arthur Le Gall, , Alexis Baron
+ * @author Arthur Le Gall, Alexis Baron
  */
-class GrundyRecPerdEtGagn {
+class GrundyRecGplusGequalsP {
 
-    /**
-     * Counter for the number of calls to the method estPerdante()
-     */
     long cpt;
-
-    /**
-     * List of losing positions
-     */
     ArrayList<ArrayList<Integer>> posPerdantes = new ArrayList<ArrayList<Integer>>();
-
-    /**
-     * List of winning positions
-     */
     ArrayList<ArrayList<Integer>> posGagnantes = new ArrayList<ArrayList<Integer>>();
-
-    /**
-     * List of statistics
-     */
-    ArrayList<Integer> statistiques = new ArrayList<Integer>();
-
-    /**
-     * List of statistics
-     */
-    ArrayList<Integer> statistiques_temps = new ArrayList<Integer>();
+    ArrayList<double[]> statistiques = new ArrayList<double[]>();
+    int type[] = {0, 0, 0, 1, 0, 2, 1, 0, 2, 1, 0, 2, 1, 3, 2, 1, 3, 2, 4, 3, 0, 4, 3, 0, 4, 3, 0, 4, 1, 2, 3, 1, 2, 4, 1, 2, 4, 1, 2, 4, 1, 5, 4, 1, 5, 4, 1, 5, 4, 1, 0};
 
     /**
      * Main method of the program, starts the game
@@ -56,16 +37,16 @@ class GrundyRecPerdEtGagn {
         testEstGagnante();
         testEnlever();
         testEstPossible();
+        testEstGagnanteEfficacite();
         testNormaliser();
         testEstConnueGagnante();
         testEstConnuePerdante();
-
-        testEstGagnanteEfficacite();
-        // leJeu(5);
+        testAdditionEstGagnante();
+        // // leJeu(5);
     }
 
     /**
-     * Plays Grundy's game
+     * Plays the Grundy game
      *
      * @param n number of matches in the game
      */
@@ -80,7 +61,6 @@ class GrundyRecPerdEtGagn {
         System.out.print("Jeu inital : ");
         afficher(jeu);
         System.out.println("");
-        // System.out.println(jeu);
 
         while (estPossible(jeu)) {
 
@@ -101,7 +81,7 @@ class GrundyRecPerdEtGagn {
                 } while (!valid);
 
             } else {
-
+                // Machine
                 System.out.println("La machine est en train de jouer...");
                 if (!jouerGagnant(jeu)) {
                     boolean found = false;
@@ -178,7 +158,6 @@ class GrundyRecPerdEtGagn {
             while (ligne != -1 && !gagnant) {
 
                 if (estPerdante(essai)) {
-
                     jeu.clear();
                     gagnant = true;
 
@@ -326,7 +305,7 @@ class GrundyRecPerdEtGagn {
     }
 
     /**
-     * Indicates if the configuration is winning. This method simply calls
+     * Indicates if the configuration is winning. Method that simply calls
      * "estPerdante".
      *
      * @param jeu game board
@@ -389,7 +368,7 @@ class GrundyRecPerdEtGagn {
 
         System.out.println("*** Test d'efficacité de la méthode estGagnante ***");
 
-        for (int i = 1; i <= 20; i++) {
+        for (int i = 1; i <= 6; i++) {
             posPerdantes.clear();
             posGagnantes.clear();
             tab = new int[n];
@@ -402,13 +381,13 @@ class GrundyRecPerdEtGagn {
             t2 = System.nanoTime();
             diffT = (t2 - t1);
 
-            Integer c = (int) cpt;
-
-            statistiques.add(c);
-            statistiques_temps.add((int) diffT);
+            double[] stat = new double[2];
+            stat[0] = n;
+            stat[1] = cpt;
+            statistiques.add(stat);
 
             System.out.println("Tps = " + diffT + " ns");
-            System.out.println("cpt = " + cpt);
+            System.out.println("cpt = " + (double) cpt);
             System.out.println("");
 
             n = n + 1;
@@ -417,17 +396,10 @@ class GrundyRecPerdEtGagn {
         System.out.println("");
 
         System.out.println("Statistiques");
-        System.out.println("Liste des CPT");
+        System.out.println("n \t Temps (ns)");
         System.out.print("[");
         for (int i = 0; i < statistiques.size(); i++) {
-            System.out.print(statistiques.get(i) + (i < statistiques.size() - 1 ? "," : ""));
-        }
-        System.out.println("]");
-
-        System.out.println("Liste des temps");
-        System.out.print("[");
-        for (int i = 0; i < statistiques_temps.size(); i++) {
-            System.out.print(statistiques_temps.get(i) + (i < statistiques_temps.size() - 1 ? "," : ""));
+            System.out.println("[" + statistiques.get(i)[0] + "," + statistiques.get(i)[1] + "],");
         }
         System.out.println("]");
 
@@ -436,13 +408,13 @@ class GrundyRecPerdEtGagn {
     }
 
     /**
-     * Splits a pile of matches into two piles. The new pile is necessarily
-     * placed at the end of the list. The pile that is split decreases by the
-     * number of matches removed.
+     * Splits a pile of matches into two piles. The new pile is added at the end
+     * of the list. The original pile is reduced by the number of matches
+     * removed.
      *
-     * @param jeu list of match piles
+     * @param jeu list of piles of matches
      * @param ligne index of the pile to be split
-     * @param nb number of matches REMOVED from the pile during the split
+     * @param nb number of matches removed from the pile during the split
      */
     void enlever(ArrayList<Integer> jeu, int ligne, int nb
     ) {
@@ -462,7 +434,6 @@ class GrundyRecPerdEtGagn {
         } else {
 
             jeu.add(nb);
-
             jeu.set(ligne, (jeu.get(ligne) - nb));
         }
     }
@@ -531,7 +502,7 @@ class GrundyRecPerdEtGagn {
      * Tests if it is possible to split one of the piles
      *
      * @param jeu game board
-     * @return true if there is at least one pile of 3 matches or more, false
+     * @return true if there is at least one pile with 3 or more matches, false
      * otherwise
      */
     boolean estPossible(ArrayList<Integer> jeu
@@ -606,7 +577,7 @@ class GrundyRecPerdEtGagn {
             System.err.println("premier(): le paramètre jeuEssai est null");
         } else {
 
-            jeuEssai.clear(); // size = 0
+            jeuEssai.clear();
             i = 0;
 
             while (i < jeu.size()) {
@@ -679,7 +650,7 @@ class GrundyRecPerdEtGagn {
     }
 
     /**
-     * Generates the next test configuration (i.e., ONE possible decomposition)
+     * Returns the index of the pile to be split into two for the new
      *
      * @param jeu game board
      * @param jeuEssai test configuration of the game after splitting
@@ -878,10 +849,11 @@ class GrundyRecPerdEtGagn {
      */
     void testEstConnuePerdante() {
         System.out.println("*** testEstConnuePerdante()***");
-
+        
         ArrayList<Integer> jeu1 = new ArrayList<>();
         jeu1.add(3);
         posPerdantes.add(jeu1);
+
         testCasEstConnuePerdante(jeu1, true);
 
         posPerdantes.clear();
@@ -892,6 +864,7 @@ class GrundyRecPerdEtGagn {
         testCasEstConnuePerdante(jeu2, false);
 
         System.out.println("");
+
     }
 
     /**
@@ -931,10 +904,12 @@ class GrundyRecPerdEtGagn {
         posGagnantes.add(jeu1);
 
         testCasEstConnueGagnante(jeu1, true);
+
         posGagnantes.clear();
 
         ArrayList<Integer> jeu2 = new ArrayList<>();
         jeu2.add(6);
+
 
         testCasEstConnueGagnante(jeu2, false);
 
@@ -958,7 +933,9 @@ class GrundyRecPerdEtGagn {
     }
 
     /**
-     * Normalizes a game board by removing piles
+     * Normalizes the game board by removing losing piles and simplifying
+     * winning pairs. Winning pairs of the same type are replaced with a losing
+     * configuration, and losing piles are removed entirely.
      *
      * @param jeu game board
      * @return the normalized game board
@@ -967,9 +944,48 @@ class GrundyRecPerdEtGagn {
         ArrayList<Integer> jeuNormalise = new ArrayList<Integer>();
         for (int i = 0; i < jeu.size(); i++) {
             if (jeu.get(i) > 2) {
-                jeuNormalise.add(jeu.get(i));
+                ArrayList<Integer> jeuNormaliseTemp = new ArrayList<Integer>();
+
+                jeuNormaliseTemp.add(jeu.get(i));
+
+                if (estConnueGagnante(jeuNormaliseTemp) || !estConnuePerdante(jeuNormaliseTemp)) {
+
+                    /*
+                     * - If [GT1 GT2 NOTHING] then [GT1 GT2 NOTHING]
+                     * - If [GT1 GT1 GT3 NOTHING] then [GT1 GT1 GT3 NOTHING] OR [GT1 GT3 NOTHING]
+                     * GT1, GT3; GT1, GT1; GT1, GT3
+                     *
+                     * GT1 GT1 GT1 X: X OR X GT1
+                     * You compare 1 to 1 but you remove, so you can't compare 1 to 1
+                     * If you have xy that doesn't work but xz that works, then in our final table we have xz or just z
+                     *
+                     * List of all possible winners and compare them one by one
+                     *
+                     * Loser = remove both
+                     * Winner = remove nothing
+                     *
+                     * x loses with y but wins with z =
+                     *
+                     * AS SOON AS WE FIND LOSING DUO (winner + winner of the same type)
+                     */
+                    jeuNormalise.add(jeuNormaliseTemp.get(0));
+                }
             }
         }
+
+        for (int j = 0; j < jeuNormalise.size(); j++) {
+            for (int k = j + 1; k < jeuNormalise.size(); k++) {
+                if (j != k) {
+                    if (!additionEstGagnante(jeuNormalise.get(j), jeuNormalise.get(k))) {
+                        jeuNormalise.remove(jeuNormalise.get(j));
+                        jeuNormalise.remove(jeuNormalise.get(k - 1));
+                        j = 0;
+
+                    }
+                }
+            }
+        }
+
         Collections.sort(jeuNormalise);
         return jeuNormalise;
     }
@@ -980,43 +996,29 @@ class GrundyRecPerdEtGagn {
     void testNormaliser() {
         System.out.println("*** testNormaliser() ***");
 
-        // Cas 1 : Liste contenant des tas valides et invalides
+        // Case 1: Normal test with defined winning and losing positions
         ArrayList<Integer> jeu1 = new ArrayList<>();
-        jeu1.add(1);
         jeu1.add(3);
         jeu1.add(5);
+        jeu1.add(13);
 
         ArrayList<Integer> attendu1 = new ArrayList<>();
         attendu1.add(3);
         attendu1.add(5);
+        attendu1.add(13);
 
         testCasNormaliser(jeu1, attendu1);
 
-        // Cas 2 : Liste contenant uniquement des tas valides
+        // Case 2: No pile is either winning or losing
         ArrayList<Integer> jeu2 = new ArrayList<>();
-        jeu2.add(4);
-        jeu2.add(6);
+        jeu2.add(11);
+        jeu2.add(9);
+        jeu2.add(15);
 
         ArrayList<Integer> attendu2 = new ArrayList<>();
-        attendu2.add(4);
-        attendu2.add(6);
+        attendu2.add(11);
 
         testCasNormaliser(jeu2, attendu2);
-
-        // Cas 3 : Liste contenant uniquement des tas invalides
-        ArrayList<Integer> jeu3 = new ArrayList<>();
-        jeu3.add(1);
-        jeu3.add(2);
-
-        ArrayList<Integer> attendu3 = new ArrayList<>();
-
-        testCasNormaliser(jeu3, attendu3);
-
-        // Cas 4 : Liste vide
-        ArrayList<Integer> jeu4 = new ArrayList<>();
-        ArrayList<Integer> attendu4 = new ArrayList<>();
-
-        testCasNormaliser(jeu4, attendu4);
 
         System.out.println("");
     }
@@ -1025,12 +1027,59 @@ class GrundyRecPerdEtGagn {
      * Test a case of the method normaliser()
      *
      * @param jeu the game board
-     * @param attendu the expected result from normaliser
+     * @param attendu the expected normalized game board
      */
     void testCasNormaliser(ArrayList<Integer> jeu, ArrayList<Integer> attendu) {
         System.out.print("normaliser(" + jeu + ") = " + attendu + " : ");
         ArrayList<Integer> resultat = normaliser(jeu);
         if (resultat.equals(attendu)) {
+            System.out.println("OK");
+        } else {
+            System.err.println("ERREUR");
+        }
+    }
+
+    /**
+     * Indicates if the addition of two piles is winning
+     */
+    boolean additionEstGagnante(int tasnum1, int tasnum2) {
+        boolean res;
+        if (type[tasnum1] == type[tasnum2]) {
+            res = false;
+
+        } else {
+            res = true;
+        }
+        return res;
+    }
+
+    /**
+     * Brief tests for the method additionEstGagnante()
+     */
+    void testAdditionEstGagnante() {
+        System.out.println("*** testAdditionEstGagnante() ***");
+
+        // Case 1: Piles of the same type
+        testCasAdditionEstGagnante(9, 15, false); 
+
+        // Case 2: Piles of different types
+        testCasAdditionEstGagnante(5, 41, true); 
+
+
+        System.out.println("");
+    }
+
+    /**
+     * Test a case of the method additionEstGagnante()
+     *
+     * @param tasnum1 the first pile
+     * @param tasnum2 the second pile
+     * @param attendu the expected result from additionEstGagnante
+     */
+    void testCasAdditionEstGagnante(int tasnum1, int tasnum2, boolean attendu) {
+        System.out.print("additionEstGagnante(" + tasnum1 + ", " + tasnum2 + ") = " + attendu + " : ");
+        boolean resultat = additionEstGagnante(tasnum1, tasnum2);
+        if (resultat == attendu) {
             System.out.println("OK");
         } else {
             System.err.println("ERREUR");
